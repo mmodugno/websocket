@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const oid = "333"
+const oid = "9"
 
 // Message structure
 type (
@@ -22,8 +22,7 @@ type (
 
 	MessageData struct {
 		ID      string `json:"id"`
-		Number  int    `json:"number"`
-		Message string `json:"message"`
+		Status  string `json:"status"`
 		Date    string `json:"date"`
 		OrderID string `json:"order_id"`
 	}
@@ -31,7 +30,7 @@ type (
 
 func connectAndSendMessage() error {
 
-	u := url.URL{Scheme: "wss", Host: "7w9u7ihj8e.execute-api.us-east-1.amazonaws.com", Path: "/production", RawQuery: "order_id=ABC"}
+	u := url.URL{Scheme: "wss", Host: "kuo58rnjek.execute-api.us-east-1.amazonaws.com", Path: "/dev", RawQuery: "order_id=ABC"}
 	log.Printf("Connecting to %s", u.String())
 
 	// Establish a connection to the WebSocket
@@ -44,7 +43,7 @@ func connectAndSendMessage() error {
 
 	// Create the message in the required format
 	msg := Message{
-		Action:  "notification",
+		Action:  "sendmessage",
 		OrderID: oid,
 		Message: MessageData{
 			OrderID: oid,
@@ -52,9 +51,8 @@ func connectAndSendMessage() error {
 				u, _ := uuid.NewUUID()
 				return u.String()
 			}(),
-			Number:  1,
-			Message: "Holaaaaaaaaaaaaaa",
-			Date:    time.Now().String(),
+			Status: "PROCESSED",
+			Date:   time.Now().Format("2006-01-02 15:04:05"),
 		},
 	}
 
