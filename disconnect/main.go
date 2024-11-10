@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-
-	"github.com/aws-sdk-go-v2/aws"
-	"github.com/aws-sdk-go-v2/config"
-	"github.com/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"log"
 )
 
 func handler(ctx context.Context, request events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
