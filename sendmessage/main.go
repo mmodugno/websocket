@@ -12,20 +12,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 )
 
-type WebSocketMessage struct {
-	Action  string      `json:"action"`
-	Message interface{} `json:"message"`
-	OrderID string      `json:"order_id"`
-}
-
-type ConnectionItem struct {
-	ConnectionID string `json:"connectionId"`
-	OrderID      string `json:"orderId"`
-}
+type (
+	WebSocketMessage struct {
+		Action  string      `json:"action"`
+		Message MessageData `json:"message"`
+		OrderID string      `json:"order_id"`
+	}
+	MessageData struct {
+		ID      string `json:"id"`
+		Status  string `json:"status"`
+		Date    string `json:"date"`
+		OrderID string `json:"order_id"`
+	}
+)
 
 func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Load AWS config
@@ -57,6 +61,28 @@ func handler(ctx context.Context, event events.APIGatewayWebsocketProxyRequest) 
 	if msg.OrderID == "" {
 		log.Printf("empty order id")
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, nil
+	}
+	ttl := time.Now().Add(1 * time.Hour).Unix()
+	// Prepare the item to store in DynamoDB
+	item := map[string]types.AttributeValue{
+		"eventId":   &types.AttributeValueMemberS{Value: msg.OrderID},
+		"status":    &types.AttributeValueMemberS{Value: msg.Message.Status},
+		"messageId": &types.AttributeValueMemberS{Value: msg.Message.ID},
+		"date":      &types.AttributeValueMemberS{Value: msg.Message.Date},
+		"ttl":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%d", ttl)},
+	}
+
+	// Insert into DynamoDB
+	_, err = dynamoClient.PutItem(ctx, &dynamodb.PutItemInput{
+		TableName: aws.String("WebSocketMessages"),
+		Item:      item,
+	})
+	if err != nil {
+		log.Printf("DynamoDB error: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Body:       fmt.Sprintf(`{"message":"Error saving message","error":"%v"}`, err),
+		}, nil
 	}
 
 	// Query DynamoDB for connections with the specified order ID
